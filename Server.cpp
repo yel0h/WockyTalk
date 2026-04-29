@@ -1,8 +1,10 @@
 #include "Server.hpp"
+#include "ClientHandler.hpp"
 #include <iostream>
-#include <unistd.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <thread>
+#include <unistd.h>
 
 void Server::start()
 {
@@ -23,38 +25,25 @@ void Server::start()
         return;
     }
 
-    if (listen(serverFd, 1) < 0)
+    if (listen(serverFd, 5) < 0)
     {
         std::cerr << "Listen failed" << std::endl;
         return;
     }
 
     std::cout << "Server listening on port " << port << "..." << std::endl;
-    sockaddr clientAddr{};
-    unsigned int clientSize = sizeof(clientAddr);
-    int clientSocket = accept(serverFd, &clientAddr, &clientSize);
-    if (clientSocket < 0)
-    {
-        std::cerr << "Accept failed" << std::endl;
-        return;
-    }
-
-    std::cout << "Client connected!" << std::endl;
-    char buffer[1024];
     while (true)
     {
-        long bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
-        if (bytesReceived <= 0)
+        int clientSocket = accept(serverFd, nullptr, nullptr);
+        if (clientSocket < 0)
         {
-            std::cout << "Client disconnected" << std::endl;
+            std::cerr << "Accept failed" << std::endl;
             break;
         }
 
-        buffer[bytesReceived] = '\0';
-        std::cout << "Received (" << bytesReceived << " bytes): " << buffer;
-        send(clientSocket, buffer, bytesReceived, 0);
+        std::cout << "Client connected!" << std::endl;
+        std::thread(&ClientHandler::handleClient, ClientHandler(clientSocket)).detach();
     }
 
-    close(clientSocket);
     close(serverFd);
 }
