@@ -40,6 +40,21 @@ void Server::start()
     }
 
     std::cout << "Client connected!" << std::endl;
+    char buffer[1024];
+    while (true)
+    {
+        long bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+        if (bytesReceived <= 0)
+        {
+            std::cout << "Client disconnected" << std::endl;
+            break;
+        }
+
+        buffer[bytesReceived] = '\0';
+        std::cout << "Received (" << bytesReceived << " bytes): " << buffer;
+        send(clientSocket, buffer, bytesReceived, 0);
+    }
+
     close(clientSocket);
     close(serverFd);
 }
