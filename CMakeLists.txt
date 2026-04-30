@@ -11,9 +11,7 @@ add_executable(WockyTalkServer server/main.cpp
         common/MessageHeader.hpp
         common/Message.hpp
         core/MessageQueue.cpp
-        core/MessageQueue.hpp
-        core/ThreadPool.cpp
-        core/ThreadPool.hpp)
+        core/MessageQueue.hpp)
 
 add_executable(WockyTalkClient client/main.cpp
         common/MessageHeader.hpp
