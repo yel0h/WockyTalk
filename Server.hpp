@@ -16,5 +16,7 @@ public:
     explicit Server(unsigned short port) : port(port) {}
 
     void start();
+
+    void broadcast(int senderSocket, const char *message, unsigned long size);
 };
 #endif//WOCKYTALK_SERVER_HPP

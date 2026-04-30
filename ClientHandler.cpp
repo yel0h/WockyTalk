@@ -17,7 +17,7 @@ void ClientHandler::handleClient()
 
         buffer[bytesReceived] = '\0';
         std::cout << "Received (" << bytesReceived << " bytes): " << buffer;
-        send(clientSocket, buffer, bytesReceived, 0);
+        server.broadcast(clientSocket, buffer, bytesReceived);
     }
 
     {

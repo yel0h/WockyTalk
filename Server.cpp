@@ -53,3 +53,21 @@ void Server::start()
 
     close(serverFd);
 }
+
+void Server::broadcast(int senderSocket, const char *message, unsigned long size)
+{
+    std::vector<int> snapshot;
+
+    {
+        std::lock_guard<std::mutex> lock(clientsMutex);
+        snapshot = clients;
+    }
+
+    for (int client : snapshot)
+    {
+        if (client != senderSocket)
+        {
+            send(client, message, size, 0);
+        }
+    }
+}
