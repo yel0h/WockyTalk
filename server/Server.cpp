@@ -1,6 +1,6 @@
 #include "Server.hpp"
 #include "ClientHandler.hpp"
-#include <iostream>
+#include "../core/Logger.hpp"
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <thread>
@@ -10,7 +10,7 @@ void Server::start()
     serverFd = socket(AF_INET, SOCK_STREAM, 0);
     if (serverFd == -1)
     {
-        std::cerr << "Socket creation failed" << std::endl;
+        ERR("Socket creation failed");
         return;
     }
 
@@ -20,22 +20,22 @@ void Server::start()
     address.sin_port = htons(port);
     if (bind(serverFd, reinterpret_cast<sockaddr const *>(&address), sizeof(address)) < 0)
     {
-        std::cerr << "Bind failed" << std::endl;
+        ERR("Bind failed");
         return;
     }
 
     if (listen(serverFd, 5) < 0)
     {
-        std::cerr << "Listen failed" << std::endl;
+        ERR("Listen failed");
         return;
     }
 
-    std::cout << "Server listening on port " << port << "..." << std::endl;
+    LOG("Server listening on port " << port << "...");
     std::thread(&Server::acceptLoop, this).detach();
     while (true)
     {
         Message msg = messageQueue.pop();
-        std::cout << "Received (" << msg.data.size() << " bytes): " << msg.data.data() << std::endl;
+        LOG("Received (" << msg.data.size() << " bytes): " << msg.data.data());
         broadcast(msg.senderSocket, msg.data.data(), msg.data.size());
     }
 }
@@ -51,9 +51,9 @@ void Server::broadcast(int senderSocket, const char *message, unsigned long size
 
     for (int client : snapshot)
     {
-        if (client != senderSocket)
+        if (client != senderSocket && send(client, message, size, 0) == -1)
         {
-            send(client, message, size, 0);
+            ERR("Send failed");
         }
     }
 }
@@ -65,11 +65,11 @@ void Server::acceptLoop()
         int clientSocket = accept(serverFd, nullptr, nullptr);
         if (clientSocket < 0)
         {
-            std::cerr << "Accept failed" << std::endl;
+            ERR("Accept failed");
             break;
         }
 
-        std::cout << "Client connected!" << std::endl;
+        LOG("Client connected!");
 
         {
             std::lock_guard<std::mutex> lock(clientsMutex);

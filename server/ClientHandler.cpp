@@ -1,5 +1,6 @@
 #include "ClientHandler.hpp"
 #include "../common/MessageHeader.hpp"
+#include "../core/Logger.hpp"
 #include <iostream>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -11,21 +12,21 @@ void ClientHandler::handleClient()
         MessageHeader header{};
         if (!recvAll(&header, sizeof(header)))
         {
-            std::cout << "Client disconnected" << std::endl;
+            LOG("Client disconnected");
             break;
         }
 
         unsigned int size = ntohl(header.size);
         if (size > 1024)
         {
-            std::cerr << "Message too large!" << std::endl;
+            SERR("Message too large!");
             break;
         }
 
         std::vector<char> body(size);
         if (!recvAll(body.data(), size))
         {
-            std::cout << "Client disconnected" << std::endl;
+            LOG("Client disconnected");
             break;
         }
 

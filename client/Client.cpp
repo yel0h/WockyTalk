@@ -1,5 +1,6 @@
 #include "Client.hpp"
 #include "../common/MessageHeader.hpp"
+#include "../core/Logger.hpp"
 #include <arpa/inet.h>
 #include <cstdlib>
 #include <iostream>
@@ -10,13 +11,20 @@
 Client::Client(char const *ip, unsigned short port)
 {
     sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == -1)
+    {
+        ERR("Socket creation failed");
+        exit(1);
+    }
+
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     inet_pton(AF_INET, ip, &serverAddr.sin_addr);
     if (connect(sock, reinterpret_cast<sockaddr const *>(&serverAddr), sizeof(serverAddr)) == -1)
     {
-        std::cerr << "Connect failed" << std::endl;
+        ERR("Connect failed");
+        close(sock);
         exit(1);
     }
 }
@@ -33,8 +41,10 @@ void Client::sendMessage(const std::string &msg) const
 {
     MessageHeader header{};
     header.size = htonl(msg.size());
-    send(sock, &header, sizeof(header), 0);
-    send(sock, msg.data(), msg.size(), 0);
+    if (send(sock, &header, sizeof(header), 0) == -1 || send(sock, msg.data(), msg.size(), 0) == -1)
+    {
+        ERR("Send failed");
+    }
 }
 
 void Client::receiveLoop() const
@@ -45,6 +55,7 @@ void Client::receiveLoop() const
         long bytes = recv(sock, buffer, sizeof(buffer), 0);
         if (bytes <= 0)
         {
+            std::cout << "Server disconnected" << std::endl;
             break;
         }
 
@@ -61,6 +72,7 @@ void Client::sendLoop() const
         std::getline(std::cin, input);
         if (input.empty())
         {
+            std::cout << "Disconnected" << std::endl;
             shutdown(sock, SHUT_RDWR);
             break;
         }
