@@ -1,12 +1,16 @@
 #include "Client.hpp"
 #include "../common/MessageHeader.hpp"
 #include "../core/Logger.hpp"
-#include <arpa/inet.h>
 #include <cstdlib>
 #include <iostream>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include <thread>
+#ifdef _WIN32
+#include <ws2tcpip.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#endif
 
 Client::Client(char const *ip, unsigned short port)
 {
@@ -24,7 +28,11 @@ Client::Client(char const *ip, unsigned short port)
     if (connect(sock, reinterpret_cast<sockaddr const *>(&serverAddr), sizeof(serverAddr)) == -1)
     {
         ERR("Connect failed");
+#ifdef _WIN32
+        closesocket(sock);
+#else
         close(sock);
+#endif
         exit(1);
     }
 }
@@ -41,7 +49,7 @@ void Client::sendMessage(const std::string &msg) const
 {
     MessageHeader header{};
     header.size = htonl(msg.size());
-    if (send(sock, &header, sizeof(header), 0) == -1 || send(sock, msg.data(), msg.size(), 0) == -1)
+    if (send(sock, reinterpret_cast<char const *>(&header), sizeof(header), 0) == -1 || send(sock, msg.data(), msg.size(), 0) == -1)
     {
         ERR("Send failed");
     }
@@ -72,8 +80,13 @@ void Client::sendLoop() const
         std::getline(std::cin, input);
         if (input.empty())
         {
-            std::cout << "Disconnected" << std::endl;
-            shutdown(sock, SHUT_RDWR);
+            shutdown(sock,
+#ifdef _WIN32
+                     SD_BOTH
+#else
+                     SHUT_RDWR
+#endif
+                     );
             break;
         }
 

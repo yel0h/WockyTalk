@@ -19,3 +19,7 @@ add_executable(WockyTalkClient client/main.cpp
         client/Client.cpp
         client/Client.hpp
         core/Logger.hpp)
+
+if(WIN32)
+    target_link_libraries(WockyTalkClient ws2_32)
+endif()

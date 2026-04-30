@@ -1,6 +1,13 @@
 #ifndef WOCKYTALK_CLIENT_HPP
 #define WOCKYTALK_CLIENT_HPP
 #include <string>
+#ifdef _WIN32
+#include <winsock2.h>
+
+using Socket = SOCKET;
+#else
+using Socket = int;
+#endif
 
 class Client
 {
