@@ -3,8 +3,14 @@ project(WockyTalk)
 
 set(CMAKE_CXX_STANDARD 26)
 
-add_executable(WockyTalk main.cpp
-        Server.cpp
-        Server.hpp
-        ClientHandler.cpp
-        ClientHandler.hpp)
+add_executable(WockyTalkServer server/main.cpp
+        server/Server.cpp
+        server/Server.hpp
+        server/ClientHandler.cpp
+        server/ClientHandler.hpp
+        common/MessageHeader.hpp)
+
+add_executable(WockyTalkClient client/main.cpp
+        common/MessageHeader.hpp
+        client/Client.cpp
+        client/Client.hpp)

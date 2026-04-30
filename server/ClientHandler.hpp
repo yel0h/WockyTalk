@@ -12,5 +12,7 @@ public:
     explicit ClientHandler(int clientSocket, Server &server) : clientSocket(clientSocket), server(server) {}
 
     void handleClient();
+
+    bool recvAll(void *buffer, unsigned long length) const;
 };
 #endif//WOCKYTALK_CLIENTHANDLER_HPP

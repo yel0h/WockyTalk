@@ -1,0 +1,60 @@
+#include "ClientHandler.hpp"
+#include "../common/MessageHeader.hpp"
+#include <iostream>
+#include <netinet/in.h>
+#include <unistd.h>
+
+void ClientHandler::handleClient()
+{
+    while (true)
+    {
+        MessageHeader header{};
+        if (!recvAll(&header, sizeof(header)))
+        {
+            std::cout << "Client disconnected" << std::endl;
+            break;
+        }
+
+        unsigned int size = ntohl(header.size);
+        if (size > 1024)
+        {
+            std::cerr << "Message too large!" << std::endl;
+            break;
+        }
+
+        std::vector<char> body(size);
+        if (!recvAll(body.data(), size))
+        {
+            std::cout << "Client disconnected" << std::endl;
+            break;
+        }
+
+        std::cout << "Received (" << size << " bytes): " << std::string(body.begin(), body.end()) << std::endl;
+        server.broadcast(clientSocket, body.data(), size);
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(server.clientsMutex);
+        server.clients.erase(std::remove(server.clients.begin(), server.clients.end(), clientSocket), server.clients.end());
+    }
+
+    close(clientSocket);
+}
+
+bool ClientHandler::recvAll(void *buffer, unsigned long length) const
+{
+    unsigned long total = 0;
+    char *buf = static_cast<char *>(buffer);
+    while (total < length)
+    {
+        long bytes = recv(clientSocket, buf + total, length - total, 0);
+        if (bytes <= 0)
+        {
+            return false;
+        }
+
+        total += bytes;
+    }
+
+    return true;
+}
