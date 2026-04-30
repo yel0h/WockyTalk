@@ -1,5 +1,8 @@
 #ifndef WOCKYTALK_SERVER_HPP
 #define WOCKYTALK_SERVER_HPP
+#include <mutex>
+#include <vector>
+
 class Server
 {
 private:
@@ -7,6 +10,9 @@ private:
     int serverFd{};
 
 public:
+    std::vector<int> clients;
+    std::mutex clientsMutex;
+
     explicit Server(unsigned short port) : port(port) {}
 
     void start();

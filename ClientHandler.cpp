@@ -20,5 +20,10 @@ void ClientHandler::handleClient()
         send(clientSocket, buffer, bytesReceived, 0);
     }
 
+    {
+        std::lock_guard<std::mutex> lock(server.clientsMutex);
+        server.clients.erase(std::remove(server.clients.begin(), server.clients.end(), clientSocket), server.clients.end());
+    }
+
     close(clientSocket);
 }

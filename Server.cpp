@@ -42,7 +42,13 @@ void Server::start()
         }
 
         std::cout << "Client connected!" << std::endl;
-        std::thread(&ClientHandler::handleClient, ClientHandler(clientSocket)).detach();
+
+        {
+            std::lock_guard<std::mutex> lock(clientsMutex);
+            clients.push_back(clientSocket);
+        }
+
+        std::thread(&ClientHandler::handleClient, ClientHandler(clientSocket, *this)).detach();
     }
 
     close(serverFd);
