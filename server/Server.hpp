@@ -1,5 +1,6 @@
 #ifndef WOCKYTALK_SERVER_HPP
 #define WOCKYTALK_SERVER_HPP
+#include "../core/MessageQueue.hpp"
 #include <mutex>
 #include <vector>
 
@@ -8,6 +9,7 @@ class Server
 private:
     unsigned short port;
     int serverFd{};
+    MessageQueue messageQueue;
 
 public:
     std::vector<int> clients;
