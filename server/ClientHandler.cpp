@@ -29,8 +29,10 @@ void ClientHandler::handleClient()
             break;
         }
 
-        std::cout << "Received (" << size << " bytes): " << std::string(body.begin(), body.end()) << std::endl;
-        server.broadcast(clientSocket, body.data(), size);
+        Message msg;
+        msg.senderSocket = clientSocket;
+        msg.data.assign(body.begin(), body.end());
+        server.messageQueue.push(std::move(msg));
     }
 
     {

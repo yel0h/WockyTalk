@@ -1,6 +1,6 @@
 #include "MessageQueue.hpp"
 
-void MessageQueue::push(Message &msg)
+void MessageQueue::push(Message msg)
 {
     {
         std::lock_guard<std::mutex> lock(mutex);

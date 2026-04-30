@@ -13,7 +13,7 @@ private:
     std::condition_variable cv;
 
 public:
-    void push(Message &msg);
+    void push(Message msg);
 
     Message pop();
 };

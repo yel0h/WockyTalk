@@ -4,7 +4,6 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <thread>
-#include <unistd.h>
 
 void Server::start()
 {
@@ -32,26 +31,13 @@ void Server::start()
     }
 
     std::cout << "Server listening on port " << port << "..." << std::endl;
+    std::thread(&Server::acceptLoop, this).detach();
     while (true)
     {
-        int clientSocket = accept(serverFd, nullptr, nullptr);
-        if (clientSocket < 0)
-        {
-            std::cerr << "Accept failed" << std::endl;
-            break;
-        }
-
-        std::cout << "Client connected!" << std::endl;
-
-        {
-            std::lock_guard<std::mutex> lock(clientsMutex);
-            clients.push_back(clientSocket);
-        }
-
-        std::thread(&ClientHandler::handleClient, ClientHandler(clientSocket, *this)).detach();
+        Message msg = messageQueue.pop();
+        std::cout << "Received (" << msg.data.size() << " bytes): " << msg.data.data() << std::endl;
+        broadcast(msg.senderSocket, msg.data.data(), msg.data.size());
     }
-
-    close(serverFd);
 }
 
 void Server::broadcast(int senderSocket, const char *message, unsigned long size)
@@ -69,5 +55,27 @@ void Server::broadcast(int senderSocket, const char *message, unsigned long size
         {
             send(client, message, size, 0);
         }
+    }
+}
+
+void Server::acceptLoop()
+{
+    while (true)
+    {
+        int clientSocket = accept(serverFd, nullptr, nullptr);
+        if (clientSocket < 0)
+        {
+            std::cerr << "Accept failed" << std::endl;
+            break;
+        }
+
+        std::cout << "Client connected!" << std::endl;
+
+        {
+            std::lock_guard<std::mutex> lock(clientsMutex);
+            clients.push_back(clientSocket);
+        }
+
+        std::thread(&ClientHandler::handleClient, ClientHandler(clientSocket, *this)).detach();
     }
 }
