@@ -1,6 +1,7 @@
 #ifndef WOCKYTALK_SERVER_HPP
 #define WOCKYTALK_SERVER_HPP
 #include "../core/MessageQueue.hpp"
+#include "../core/ThreadPool.hpp"
 #include <mutex>
 #include <vector>
 
@@ -9,6 +10,7 @@ class Server
 private:
     unsigned short port;
     int serverFd{};
+    ThreadPool pool{4};
 
 public:
     std::vector<int> clients;
