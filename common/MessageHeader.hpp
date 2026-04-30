@@ -3,5 +3,7 @@
 struct MessageHeader
 {
     unsigned int size;
+    unsigned int type;
+    int senderSocket;
 };
 #endif//WOCKYTALK_MESSAGEHEADER_HPP

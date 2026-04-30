@@ -1,5 +1,4 @@
 #include "ClientHandler.hpp"
-#include "../common/MessageHeader.hpp"
 #include "../core/Logger.hpp"
 #include <iostream>
 #include <netinet/in.h>
@@ -16,29 +15,31 @@ void ClientHandler::handleClient()
             break;
         }
 
-        unsigned int size = ntohl(header.size);
-        if (size > 1024)
+        header.size = ntohl(header.size);
+        header.type = ntohl(header.type);
+        header.senderSocket = clientSocket;
+        if (header.size > 1024)
         {
             SERR("Message too large!");
             break;
         }
 
-        std::vector<char> body(size);
-        if (!recvAll(body.data(), size))
+        std::vector<char> body(header.size);
+        if (!recvAll(body.data(), header.size))
         {
             LOG("Client disconnected");
             break;
         }
 
         Message msg;
-        msg.senderSocket = clientSocket;
-        msg.data.assign(body.begin(), body.end());
+        msg.header = header;
+        msg.body.assign(body.begin(), body.end());
         server.messageQueue.push(std::move(msg));
     }
 
     {
         std::lock_guard<std::mutex> lock(server.clientsMutex);
-        server.clients.erase(std::remove(server.clients.begin(), server.clients.end(), clientSocket), server.clients.end());
+        server.clients.erase(std::remove_if(server.clients.begin(), server.clients.end(), [&](const Client &c) { return c.socket == clientSocket; }), server.clients.end());
     }
 
     close(clientSocket);

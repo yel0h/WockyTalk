@@ -1,5 +1,6 @@
 #include "Client.hpp"
 #include "../common/MessageHeader.hpp"
+#include "../common/MessageType.hpp"
 #include "../core/Logger.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -12,8 +13,9 @@
 #include <arpa/inet.h>
 #endif
 
-Client::Client(char const *ip, unsigned short port)
+Client::Client(char const *ip, unsigned short port, const std::string &nickname)
 {
+    std::cout << "Connecting to " << ip << ":" << port << std::endl;
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1)
     {
@@ -35,6 +37,8 @@ Client::Client(char const *ip, unsigned short port)
 #endif
         exit(1);
     }
+
+    sendHello(nickname);
 }
 
 void Client::run() const
@@ -49,6 +53,7 @@ void Client::sendMessage(const std::string &msg) const
 {
     MessageHeader header{};
     header.size = htonl(msg.size());
+    header.type = htonl(static_cast<unsigned int>(MessageType::CHAT));
     if (send(sock, reinterpret_cast<char const *>(&header), sizeof(header), 0) == -1 || send(sock, msg.data(), msg.size(), 0) == -1)
     {
         ERR("Send failed");
@@ -91,5 +96,16 @@ void Client::sendLoop() const
         }
 
         sendMessage(input);
+    }
+}
+
+void Client::sendHello(const std::string &nickname) const
+{
+    MessageHeader header{};
+    header.size = htonl(nickname.size());
+    header.type = htonl(static_cast<unsigned int>(MessageType::HELLO));
+    if (send(sock, reinterpret_cast<char const *>(&header), sizeof(header), 0) == -1 || send(sock, nickname.data(), nickname.size(), 0) == -1)
+    {
+        ERR("Send failed");
     }
 }

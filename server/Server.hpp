@@ -4,14 +4,22 @@
 #include <mutex>
 #include <vector>
 
+struct Client
+{
+    int socket;
+    int id;
+    std::string name;
+};
+
 class Server
 {
 private:
     unsigned short port;
     int serverFd{};
+    std::atomic<int> nextClientId{1};
 
 public:
-    std::vector<int> clients;
+    std::vector<Client> clients;
     std::mutex clientsMutex;
     MessageQueue messageQueue;
 

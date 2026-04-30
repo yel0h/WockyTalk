@@ -15,7 +15,7 @@ private:
     int sock;
 
 public:
-    Client(char const *ip, unsigned short port);
+    Client(char const *ip, unsigned short port, const std::string &nickname);
 
     void run() const;
 
@@ -24,5 +24,7 @@ public:
     void receiveLoop() const;
 
     void sendLoop() const;
+
+    void sendHello(const std::string &nickname) const;
 };
 #endif//WOCKYTALK_CLIENT_HPP
