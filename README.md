@@ -4,6 +4,8 @@ WockyTalk is a multithreaded TCP chat system written in modern C++.
 It consists of:
 - a concurrent TCP server (Linux)
 - a cross-platform command-line chat client (Linux + Windows)
+  
+<img width="768" height="432" alt="output" src="https://github.com/user-attachments/assets/29ad2708-ad61-4264-ad44-497859b178bc" />
 
 ## Features
 - TCP networking using POSIX sockets (also Winsock for the client)
